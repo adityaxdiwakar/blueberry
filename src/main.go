@@ -96,7 +96,16 @@ type SQLQuoteObject struct {
 var addr = flag.String("addr", "md-api.tradovate.com", "http service address")
 var quoteObject QuoteObject;
 
-func initCache(db *sql.DB) {
+
+var db *sql.DB
+
+func initCache() {
+	err := db.Ping()
+	if err != nil {
+		panic(err.Error())
+	} else {
+		log.Printf("Connected to DB Successfully!")
+	}
 	results, err := db.Query("SELECT * FROM quotes ORDER BY id DESC LIMIT 1;")
 	if err != nil {
 		log.Fatal("Error ocurred! Could not populate cache!")
@@ -137,11 +146,11 @@ func initCache(db *sql.DB) {
 			},
 		}
 	}
-
 }
 
 func main() {
-	db, err := sql.Open("mysql", "blueberry:password@/md")
+	var err error
+	db, err = sql.Open("mysql", "blueberry:password@/md")
 	defer db.Close()
 
 	err = db.Ping()
@@ -155,8 +164,6 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loaded environment configuration")
 	}
-
-	initCache(db)
 
 	flag.Parse()
 
@@ -180,7 +187,6 @@ func main() {
 
 	done := make(chan struct{})
 
-	quoteObject := QuoteObject{}
 	go func() {
 		defer close(done)
 		count := 0
