@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"bufio"
 	"os/signal"
 	"time"
 	"strings"
@@ -136,6 +137,7 @@ func initCache(db *sql.DB) {
 				Size: cacheObject.TradeSize,
 			},
 		}
+		log.Printf("%s", quoteObject)
 	}
 
 }
@@ -198,7 +200,7 @@ func main() {
 				json.Unmarshal([]byte(r_message), &data)
 				compressedResponse := data[0].D.Quotes[0]
 				quoteObject = QuoteObject{
-					Timestamp:     compressedResponse.Timestamp.Unix(),
+					Timestamp:     compressedResponse.Timestamp.UnixNano()/(1000*1000),
 					ContractID:    compressedResponse.ContractID,
 					SessionVolume: compressedResponse.Entries.TotalTradeVolume.Size,
 					OpenInterest:  compressedResponse.Entries.OpenInterest.Size,
@@ -217,7 +219,7 @@ func main() {
 				statement := fmt.Sprintf("insert into quotes (contract_id, session_volume, open_interest, opening_price, high_price, settlement_price, low_price, bid_price, bid_size, ask_price, ask_size, trade_price, trade_size, timestamp) VALUES (%d, %d, %d, %f, %f, %f, %f, %f, %d, %f, %d, %f, %d, %d)", 
 										compressedResponse.ContractID, compressedResponse.Entries.TotalTradeVolume.Size, compressedResponse.Entries.OpenInterest.Size, compressedResponse.Entries.OpeningPrice.Price, compressedResponse.Entries.HighPrice.Price, compressedResponse.Entries.SettlementPrice.Price,
 										compressedResponse.Entries.LowPrice.Price, compressedResponse.Entries.Bid.Price, compressedResponse.Entries.Bid.Size, compressedResponse.Entries.Offer.Price, compressedResponse.Entries.Offer.Size, compressedResponse.Entries.Trade.Price, compressedResponse.Entries.Trade.Size,
-										compressedResponse.Timestamp.Unix())
+										compressedResponse.Timestamp.UnixNano()/(1000*1000))
 				quoteIn, err := db.Prepare(statement)
 				if err != nil {
 					log.Println("Something went wrong preparing a SQL Insertion")
@@ -268,7 +270,7 @@ func main() {
 	router.HandleFunc("/", rootPage)
 	router.HandleFunc("/recent/", recentQuote)
 	router.Use(loggingMiddleware)
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(":6009", router))
 }
 
 type HTTPTextResponse struct {
