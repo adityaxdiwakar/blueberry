@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/url"
 	"os"
-	"bufio"
 	"os/signal"
 	"time"
 	"strings"
