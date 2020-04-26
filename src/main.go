@@ -136,7 +136,6 @@ func initCache(db *sql.DB) {
 				Size: cacheObject.TradeSize,
 			},
 		}
-		log.Printf("%s", quoteObject)
 	}
 
 }
