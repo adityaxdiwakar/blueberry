@@ -183,12 +183,18 @@ func main() {
 	quoteObject := QuoteObject{}
 	go func() {
 		defer close(done)
+		count := 0
 		for {
 			_, message, err := c.ReadMessage()
 			if err != nil {
 				log.Fatal("read:", err)
 				return
 			}
+			count += 1
+			if (count == 2) {
+				c.WriteMessage(websocket.TextMessage, []byte("md/subscribequote\n7\n\n{\"symbol\":1717695}"))
+			}
+
 			r_message := string(message)
 			switch {
 			case strings.Contains(r_message, "quotes"):
