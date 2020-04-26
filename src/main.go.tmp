@@ -1,0 +1,43 @@
+
+	// file, err := os.Open("quote-stream.txt")
+ 
+	// if err != nil {
+	// 	log.Fatalf("failed opening file: %s", err)
+	// }
+
+	// scanner := bufio.NewScanner(file)
+	// scanner.Split(bufio.ScanLines)
+	// var txtlines []string
+
+	// for scanner.Scan() {
+	// 	txtlines = append(txtlines, scanner.Text())
+	// }
+ 
+	// file.Close()
+ 
+	// count := 0
+	// for _, eachline := range txtlines {
+	// 	count++
+	// 	eachline = eachline[1:]
+	// 	data := ResponseObject{}
+	// 	json.Unmarshal([]byte(eachline), &data)
+	// 	compressedResponse := data[0].D.Quotes[0]
+
+	// 	statement := fmt.Sprintf("insert into quotes (contract_id, session_volume, open_interest, opening_price, high_price, settlement_price, low_price, bid_price, bid_size, ask_price, ask_size, trade_price, trade_size, timestamp) VALUES (%d, %d, %d, %f, %f, %f, %f, %f, %d, %f, %d, %f, %d, %d)", 
+	// 	compressedResponse.ContractID, compressedResponse.Entries.TotalTradeVolume.Size, compressedResponse.Entries.OpenInterest.Size, compressedResponse.Entries.OpeningPrice.Price, compressedResponse.Entries.HighPrice.Price, compressedResponse.Entries.SettlementPrice.Price,
+	// 	compressedResponse.Entries.LowPrice.Price, compressedResponse.Entries.Bid.Price, compressedResponse.Entries.Bid.Size, compressedResponse.Entries.Offer.Price, compressedResponse.Entries.Offer.Size, compressedResponse.Entries.Trade.Price, compressedResponse.Entries.Trade.Size,
+	// 	compressedResponse.Timestamp.Unix())
+	// 	quoteIn, err := db.Prepare(statement)
+	// 	if err != nil {
+	// 		panic(err.Error())
+	// 	}
+	// 	_, err = quoteIn.Exec()
+	// 	if err != nil {
+	// 		panic(err.Error())
+	// 	}
+	// 	quoteIn.Close()
+
+	// 	if count % 100 == 0 {
+	// 		fmt.Println(compressedResponse.Timestamp)
+	// 	}
+	// }
