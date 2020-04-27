@@ -10,6 +10,8 @@ import (
 	"os/signal"
 	"time"
 	"strings"
+	"bytes"
+	"io/ioutil"
 
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
@@ -92,6 +94,46 @@ type SQLQuoteObject struct {
 	Timestamp int64 `json:"timestamp"`
 }
 
+type TradovateCredentials struct {
+	Username string `json:"name"`
+	Password string `json:"password"`
+}
+
+type TradovateKeyResponse struct {
+	AccessToken    string    `json:"accessToken"`
+	MdAccessToken  string    `json:"mdAccessToken"`
+	ExpirationTime time.Time `json:"expirationTime"`
+	UserStatus     string    `json:"userStatus"`
+	UserID         int       `json:"userId"`
+	Name           string    `json:"name"`
+	HasLive        bool      `json:"hasLive"`
+	OutdatedTaC    bool      `json:"outdatedTaC"`
+	HasFunded      bool      `json:"hasFunded"`
+	HasMarketData  bool      `json:"hasMarketData"`
+}
+
+func getAccessToken(username string, password string) string {
+	payload := TradovateCredentials{
+		Username: username,
+		Password: password,
+	}
+	payloadByteArray, err := json.Marshal(payload)
+	if err != nil {
+		log.Fatal("Something went wrong when loading the access token!")
+	}
+	req, err := http.NewRequest("POST", "https://live-api.tradovate.com/v1/auth/accesstokenrequest", bytes.NewBuffer(payloadByteArray))
+	client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        panic(err)
+    }
+	defer resp.Body.Close()
+    body, _ := ioutil.ReadAll(resp.Body)	
+	respObj := TradovateKeyResponse{}
+	json.Unmarshal([]byte(string(body)), &respObj)
+	log.Printf("Retrieved Access Token with Credentials")
+	return respObj.MdAccessToken
+}
 
 var addr = flag.String("addr", "md-api.tradovate.com", "http service address")
 var quoteObject QuoteObject;
@@ -163,6 +205,8 @@ func main() {
 	err = godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loaded environment configuration")
+	} else {
+		log.Printf("Loaded environment variables successfully")
 	}
 
 	flag.Parse()
@@ -177,12 +221,15 @@ func main() {
 	if err != nil {
 		log.Fatal("dial:", err)
 	} else {
-		log.Printf("Established connection with WS")
+		log.Printf("Received 'Hello' from WS")
 	}
 	defer c.Close()
 
+	username := os.Getenv("USERNAME")
+	password := os.Getenv("PASSWORD")
+	accessToken := getAccessToken(username, password)		
+
 	//establish a connection
-	accessToken := os.Getenv("ACCESS_TOKEN")
 	c.WriteMessage(websocket.TextMessage, []byte("authorize\n2\n\n" + accessToken))
 
 	done := make(chan struct{})
