@@ -73,32 +73,7 @@ func initCache() {
 			log.Fatal("Error occured population object", err)
 		}
 
-		quoteObject = quoteObjectStruct{
-			Timestamp:     cacheObject.Timestamp,
-			ContractID:    cacheObject.ContractID,
-			SessionVolume: cacheObject.SessionVolume,
-			OpenInterest:  cacheObject.OpenInterest,
-			SessionPrices: sessionObject{
-				OpeningPrice:    cacheObject.OpeningPrice,
-				HighPrice:       cacheObject.HighPrice,
-				SettlementPrice: cacheObject.SettlementPrice,
-				LowPrice:        cacheObject.LowPrice,
-			},
-			Depth: depthObject{
-				Bid: priceWithSize{
-					Price: cacheObject.BidPrice,
-					Size:  cacheObject.BidSize,
-				},
-				Ask: priceWithSize{
-					Price: cacheObject.AskPrice,
-					Size:  cacheObject.AskSize,
-				},
-			},
-			Trade: priceWithSize{
-				Price: cacheObject.TradePrice,
-				Size:  cacheObject.TradeSize,
-			},
-		}
+		quoteObject = cacheObjectTranslator(cacheObject)
 	}
 }
 
@@ -167,28 +142,11 @@ func main() {
 				rMessage = rMessage[1:]
 				data := responseObjectStruct{}
 				json.Unmarshal([]byte(rMessage), &data)
-				compressedResponse := data[0].D.Quotes[0]
-				quoteObject = quoteObjectStruct{
-					Timestamp:     compressedResponse.Timestamp.UnixNano() / (1000 * 1000),
-					ContractID:    compressedResponse.ContractID,
-					SessionVolume: compressedResponse.Entries.TotalTradeVolume.Size,
-					OpenInterest:  compressedResponse.Entries.OpenInterest.Size,
-					SessionPrices: sessionObject{
-						OpeningPrice:    compressedResponse.Entries.OpeningPrice.Price,
-						HighPrice:       compressedResponse.Entries.HighPrice.Price,
-						SettlementPrice: compressedResponse.Entries.SettlementPrice.Price,
-						LowPrice:        compressedResponse.Entries.LowPrice.Price,
-					},
-					Depth: depthObject{
-						Bid: compressedResponse.Entries.Bid,
-						Ask: compressedResponse.Entries.Offer,
-					},
-					Trade: compressedResponse.Entries.Trade,
-				}
+				quoteObject = responsiveObjectTranslator(data)
 				statement := fmt.Sprintf("insert into quotes (contract_id, session_volume, open_interest, opening_price, high_price, settlement_price, low_price, bid_price, bid_size, ask_price, ask_size, trade_price, trade_size, timestamp) VALUES (%d, %d, %d, %f, %f, %f, %f, %f, %d, %f, %d, %f, %d, %d)",
-					compressedResponse.ContractID, compressedResponse.Entries.TotalTradeVolume.Size, compressedResponse.Entries.OpenInterest.Size, compressedResponse.Entries.OpeningPrice.Price, compressedResponse.Entries.HighPrice.Price, compressedResponse.Entries.SettlementPrice.Price,
-					compressedResponse.Entries.LowPrice.Price, compressedResponse.Entries.Bid.Price, compressedResponse.Entries.Bid.Size, compressedResponse.Entries.Offer.Price, compressedResponse.Entries.Offer.Size, compressedResponse.Entries.Trade.Price, compressedResponse.Entries.Trade.Size,
-					compressedResponse.Timestamp.UnixNano()/(1000*1000))
+					quoteObject.ContractID, quoteObject.SessionVolume, quoteObject.OpenInterest, quoteObject.SessionPrices.OpeningPrice, quoteObject.SessionPrices.HighPrice, quoteObject.SessionPrices.SettlementPrice,
+					quoteObject.SessionPrices.LowPrice, quoteObject.Depth.Bid.Price, quoteObject.Depth.Bid.Size, quoteObject.Depth.Ask.Price, quoteObject.Depth.Ask.Size, quoteObject.Trade.Price, quoteObject.Trade.Size,
+					quoteObject.Timestamp)
 				quoteIn, err := db.Prepare(statement)
 				if err != nil {
 					log.Println("Something went wrong preparing a SQL Insertion")
