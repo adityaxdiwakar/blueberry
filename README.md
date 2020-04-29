@@ -1,5 +1,5 @@
 # blueberry
-Blueberry is a market dada provisioner written in Golang
+Blueberry is a market data provisioner written in Golang
 
 ## Configuration
 An environment file is essential in order to run the project. The environment file must be displayed as below. You will need to replace ``TRADOVATE_ACCESS_TOKEN`` with the access token given from the Tradovate authentication handshake.
