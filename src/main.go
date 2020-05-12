@@ -132,7 +132,7 @@ func main() {
 			}
 			count++
 			if count == 2 {
-				c.WriteMessage(websocket.TextMessage, []byte("md/subscribequote\n7\n\n{\"symbol\":1717695}"))
+				c.WriteMessage(websocket.TextMessage, []byte("md/subscribequote\n7\n\n{\"symbol\":1671049}"))
 			}
 
 			rMessage := string(message)
